@@ -42,7 +42,11 @@ exports.readListOfUrls = readListOfUrls = function(){
   myStream.on('end', function() {
     data = data.split("\n");
     data.forEach(function(url) {
-      isURLArchived(url);
+      isURLArchived(url, function(exists) {
+        if (!exists) {
+          downloadUrl(url);
+        }
+      });
     });
   });
 };
@@ -56,7 +60,13 @@ exports.isUrlInList = isUrlInList = function(url){
   myStream.on('end', function() {
     data = data.split("\n");
     if (data.indexOf(url) > -1) {
-      eventEmitter.emit('urlFound');
+      isURLArchived(url, function(isArchived) {
+        if (isArchived) {
+          eventEmitter.emit('urlFound');
+        } else {
+          eventEmitter.emit('urlNotFound');
+        }
+      });
     } else {
        eventEmitter.emit('urlNotFound');
     }
@@ -70,12 +80,8 @@ exports.addUrlToList = addUrlToList = function(theUrl){
   });
 };
 
-exports.isURLArchived = isURLArchived = function(theUrl){
-  fs.exists((paths.archivedSites + theUrl), function(exists) {
-    if (!exists) {
-      downloadUrl(theUrl);
-    }
-  });
+exports.isURLArchived = isURLArchived = function(theUrl, callback){
+  fs.exists((paths.archivedSites + "/" + theUrl), callback);
 
 };
 

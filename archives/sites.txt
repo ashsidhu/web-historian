@@ -2,12 +2,7 @@ www.google.com
 www.facebook.com
 www.amazon.com
 
+www.google.com
 www.yahoo.com
-www.apple.com
-www.github.com
-www.hackreactor.com
-www.nytimes.com
-www.gmail.com
-www.bing.com
-
+www.yahoo.com
 www.bing.com
