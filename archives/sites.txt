@@ -1,3 +1,13 @@
 www.google.com
 www.facebook.com
 www.amazon.com
+
+www.yahoo.com
+www.apple.com
+www.github.com
+www.hackreactor.com
+www.nytimes.com
+www.gmail.com
+www.bing.com
+
+www.bing.com

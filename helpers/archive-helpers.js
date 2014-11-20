@@ -2,6 +2,8 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 var events = require('events');
+var httpRequest = require('http-request');
+
 exports.eventEmitter = eventEmitter = new events.EventEmitter();
 
 /*
@@ -12,9 +14,12 @@ exports.eventEmitter = eventEmitter = new events.EventEmitter();
  */
 
 exports.paths = paths = {
-  'siteAssets' : path.join(__dirname, '../web/public'),
-  'archivedSites' : path.join(__dirname, '../archives/sites'),
-  'list' : path.join(__dirname, '../archives/sites.txt')
+  'siteAssets' : '/Users/student/2014-10-web-historian/web/public',
+  // path.join(__dirname, '../web/public'),
+  'archivedSites' : '/Users/student/2014-10-web-historian/archives/sites',
+  // path.join(__dirname, '../archives/sites'),
+  'list' : '/Users/student/2014-10-web-historian/archives/sites.txt'
+  //path.join(__dirname, '../archives/sites.txt')
 };
 
 // Used for stubbing paths for jasmine tests, do not modify
@@ -27,7 +32,8 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(){
+exports.readListOfUrls = readListOfUrls = function(){
+
   var myStream = fs.createReadStream(paths.list);
   var data = "";
   myStream.addListener('data', function(chunk) {
@@ -41,7 +47,7 @@ exports.readListOfUrls = function(){
   });
 };
 
-exports.isUrlInList = function(url){
+exports.isUrlInList = isUrlInList = function(url){
   var myStream = fs.createReadStream(paths.list);
   var data = "";
   myStream.addListener('data', function(chunk) {
@@ -57,14 +63,14 @@ exports.isUrlInList = function(url){
   });
 };
 
-exports.addUrlToList = function(theUrl){
+exports.addUrlToList = addUrlToList = function(theUrl){
   fs.appendFile(paths.list, '\n' + theUrl, function(err) {
     if (err) throw err;
     console.log('added to list');
   });
 };
 
-exports.isURLArchived = function(theUrl){
+exports.isURLArchived = isURLArchived = function(theUrl){
   fs.exists((paths.archivedSites + theUrl), function(exists) {
     if (!exists) {
       downloadUrl(theUrl);
@@ -73,6 +79,15 @@ exports.isURLArchived = function(theUrl){
 
 };
 
-exports.downloadUrl = function(theUrl){
+exports.downloadUrl = downloadUrl = function(theUrl){
   //saves the html into sites/theUrl
+  httpRequest.get(theUrl, function (err, res) {
+    if (err) throw err;
+    data = res.buffer.toString();
+    console.log(res.code, res.headers);
+    fs.writeFile(paths.archivedSites + '/' + theUrl, data, function (err) {
+      if (err) throw err;
+      console.log('file written successfully');
+    });
+  });
 };
