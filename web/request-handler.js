@@ -13,6 +13,15 @@ var routes = {
       res.writeHead(200, httpHelpers.headers);
       res.end(data);
     });
+  },
+  getArchivedSite: function(req, res, fileType) {
+    fileType = fileType || path.extname(req.url);
+    httpHelpers.serveArchived(res, req.url, function (err, data) {
+      if (err) throw err;
+      res.setHeader("Content-Type", staticExt[fileType]);
+      res.writeHead(200, httpHelpers.headers);
+      res.end(data);
+    });
   }
 };
 
@@ -22,12 +31,36 @@ var staticExt = {
 };
 
 exports.handleRequest = function (req, res) {
-  if (req.url === '/') {
-    req.url = '/index.html';
-  }
+  if (req.method === "GET") {
+    if (req.url === '/') {
+      req.url = '/index.html';
+    }
 
-  if (staticExt[path.extname(req.url)]) {
-    routes.staticHandler(req, res);
+    if (staticExt[path.extname(req.url)]) {
+      routes.staticHandler(req, res);
+    }
+  } else if (req.method === "POST") {
+    var data = '';
+    req.on('data', function(chunk) {
+      data += chunk;
+    });
+    req.on('end', function() {
+      data = data.slice(4);
+      console.log(data);
+      var theHtml;
+      archive.eventEmitter.on('urlFound', function() {
+        theHtml = '/' + data;
+        req.url = theHtml;
+        routes.getArchivedSite(req, res, '.html');
+      });
+      archive.eventEmitter.on('urlNotFound', function() {
+        archive.addUrlToList(data);
+        req.url = '/loading.html';
+        routes.staticHandler(req, res);
+      });
+      archive.isUrlInList(data);
+
+    });
   }
 
   // res.end(archive.paths.list);

@@ -1,6 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var events = require('events');
+exports.eventEmitter = eventEmitter = new events.EventEmitter();
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -9,7 +11,7 @@ var _ = require('underscore');
  * customize it in any way you wish.
  */
 
-exports.paths = {
+exports.paths = paths = {
   'siteAssets' : path.join(__dirname, '../web/public'),
   'archivedSites' : path.join(__dirname, '../archives/sites'),
   'list' : path.join(__dirname, '../archives/sites.txt')
@@ -26,9 +28,25 @@ exports.initialize = function(pathsObj){
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(){
+
 };
 
-exports.isUrlInList = function(){
+exports.isUrlInList = function(url){
+  var myStream = fs.createReadStream(paths.list);
+  var data = "";
+  myStream.addListener('data', function(chunk) {
+    data += chunk;
+  });
+  myStream.on('end', function() {
+    data = data.split("\n");
+    if (data.indexOf(url) > -1) {
+      eventEmitter.emit('urlFound');
+      console.log("url found");
+    } else {
+      eventEmitter.emit('urlNotFound');
+      console.log("url not found");
+    }
+  });
 };
 
 exports.addUrlToList = function(){
