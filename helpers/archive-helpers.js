@@ -32,8 +32,15 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = readListOfUrls = function(){
-
+exports.readListOfUrls = readListOfUrls = function(callback){
+  var defaultCb = function(url) {
+    isURLArchived(url, function(exists) {
+      if (!exists) {
+        downloadUrl(url);
+      }
+    });
+  };
+  callback = callback || defaultCb;
   var myStream = fs.createReadStream(paths.list);
   var data = "";
   myStream.addListener('data', function(chunk) {
@@ -41,25 +48,13 @@ exports.readListOfUrls = readListOfUrls = function(){
   });
   myStream.on('end', function() {
     data = data.split("\n");
-    data.forEach(function(url) {
-      isURLArchived(url, function(exists) {
-        if (!exists) {
-          downloadUrl(url);
-        }
-      });
-    });
+    data.forEach(callback);
   });
 };
 
-exports.isUrlInList = isUrlInList = function(url){
-  var myStream = fs.createReadStream(paths.list);
-  var data = "";
-  myStream.addListener('data', function(chunk) {
-    data += chunk;
-  });
-  myStream.on('end', function() {
-    data = data.split("\n");
-    if (data.indexOf(url) > -1) {
+exports.isUrlInList = isUrlInList = function(url, callback){
+  var defaultCb = function (inList) {
+    if (inList) {
       isURLArchived(url, function(isArchived) {
         if (isArchived) {
           eventEmitter.emit('urlFound');
@@ -70,8 +65,27 @@ exports.isUrlInList = isUrlInList = function(url){
     } else {
        eventEmitter.emit('urlNotFound');
     }
+  };
+  callback = callback || defaultCb;
+
+  var myStream = fs.createReadStream(paths.list);
+  var data = "";
+
+  myStream.addListener('data', function(chunk) {
+    data += chunk;
+  });
+  myStream.on('end', function() {
+    data = data.split("\n");
+    callback(data.indexOf(url) > -1);
   });
 };
+
+// exports.isUrlInSitesList = isUrlInSitesList = function(url, callback) {
+//   readListOfUrls(function (currentUrl) {
+
+//   });
+// };
+
 
 exports.addUrlToList = addUrlToList = function(theUrl){
   fs.appendFile(paths.list, '\n' + theUrl, function(err) {
@@ -81,6 +95,9 @@ exports.addUrlToList = addUrlToList = function(theUrl){
 };
 
 exports.isURLArchived = isURLArchived = function(theUrl, callback){
+  fs.exists((paths.archivedSites + "/" + theUrl), function (exists){
+    console.log(theUrl, exists);
+  });
   fs.exists((paths.archivedSites + "/" + theUrl), callback);
 
 };

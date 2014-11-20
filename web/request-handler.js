@@ -54,7 +54,13 @@ exports.handleRequest = function (req, res) {
         archive.eventEmitter.removeAllListeners('urlNotFound');
       });
       archive.eventEmitter.once('urlNotFound', function() {
-        archive.addUrlToList(data);
+        archive.isUrlInList(data, function(inList) {
+          console.log('checking isInList');
+          if (!inList) {
+            console.log('!inList');
+            archive.addUrlToList(data);
+          }
+        });
         req.url = '/loading.html';
         routes.staticHandler(req, res);
         archive.eventEmitter.removeAllListeners('urlFound');
