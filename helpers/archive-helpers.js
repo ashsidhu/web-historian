@@ -28,7 +28,17 @@ exports.initialize = function(pathsObj){
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(){
-
+  var myStream = fs.createReadStream(paths.list);
+  var data = "";
+  myStream.addListener('data', function(chunk) {
+    data += chunk;
+  });
+  myStream.on('end', function() {
+    data = data.split("\n");
+    data.forEach(function(url) {
+      isURLArchived(url);
+    });
+  });
 };
 
 exports.isUrlInList = function(url){
@@ -41,19 +51,28 @@ exports.isUrlInList = function(url){
     data = data.split("\n");
     if (data.indexOf(url) > -1) {
       eventEmitter.emit('urlFound');
-      console.log("url found");
     } else {
-      eventEmitter.emit('urlNotFound');
-      console.log("url not found");
+       eventEmitter.emit('urlNotFound');
     }
   });
 };
 
-exports.addUrlToList = function(){
+exports.addUrlToList = function(theUrl){
+  fs.appendFile(paths.list, '\n' + theUrl, function(err) {
+    if (err) throw err;
+    console.log('added to list');
+  });
 };
 
-exports.isURLArchived = function(){
+exports.isURLArchived = function(theUrl){
+  fs.exists((paths.archivedSites + theUrl), function(exists) {
+    if (!exists) {
+      downloadUrl(theUrl);
+    }
+  });
+
 };
 
-exports.downloadUrls = function(){
+exports.downloadUrl = function(theUrl){
+  //saves the html into sites/theUrl
 };

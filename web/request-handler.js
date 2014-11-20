@@ -46,17 +46,18 @@ exports.handleRequest = function (req, res) {
     });
     req.on('end', function() {
       data = data.slice(4);
-      console.log(data);
       var theHtml;
-      archive.eventEmitter.on('urlFound', function() {
+      archive.eventEmitter.once('urlFound', function() {
         theHtml = '/' + data;
         req.url = theHtml;
         routes.getArchivedSite(req, res, '.html');
+        archive.eventEmitter.removeAllListeners('urlNotFound');
       });
-      archive.eventEmitter.on('urlNotFound', function() {
+      archive.eventEmitter.once('urlNotFound', function() {
         archive.addUrlToList(data);
         req.url = '/loading.html';
         routes.staticHandler(req, res);
+        archive.eventEmitter.removeAllListeners('urlFound');
       });
       archive.isUrlInList(data);
 
